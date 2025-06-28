@@ -59,6 +59,47 @@ daily_snapshot/
         00000000000000000000.json <- new (contains metadata)
 ```
 
+Sample content of 00000000000000000000.json
+```json
+{
+  "commitInfo": {
+    "timestamp": 1704067200000,
+    "operation": "CREATE TABLE",
+    "operationParameters": {
+      "isManaged": "true",
+      "description": null,
+      "partitionBy": "[\"partition_date\"]",
+      "properties": "{}"
+    },
+    "readVersion": -1,
+    "isolationLevel": "Serializable",
+    "isBlindAppend": true,
+    "operationMetrics": {},
+    "engineInfo": "Apache-Spark/3.5.0 Delta-Lake/3.0.0",
+    "txnId": "550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+{
+  "metaData": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "format": {
+      "provider": "parquet",
+      "options": {}
+    },
+    "schemaString": "{\"type\":\"struct\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"name\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"feature1\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"partition_date\",\"type\":\"date\",\"nullable\":true,\"metadata\":{}}]}",
+    "partitionColumns": ["partition_date"],
+    "configuration": {},
+    "createdTime": 1704067200000
+  }
+}
+{
+  "protocol": {
+    "minReaderVersion": 1,
+    "minWriterVersion": 2
+  }
+}
+```
+
 ### first write of date T
 
 ```sql
@@ -94,6 +135,42 @@ daily_snapshot/
     _delta_log/
         00000000000000000000.json
         00000000000000000001.json <- new (add operation)
+```
+
+Sample content of 00000000000000000001.json
+```json
+{
+  "commitInfo": {
+    "timestamp": 1704067800000,
+    "operation": "WRITE",
+    "operationParameters": {
+      "mode": "Overwrite",
+      "partitionBy": "[\"partition_date\"]"
+    },
+    "readVersion": 0,
+    "isolationLevel": "Serializable",
+    "isBlindAppend": false,
+    "operationMetrics": {
+      "numFiles": "1",
+      "numOutputRows": "2",
+      "numOutputBytes": "1247"
+    },
+    "engineInfo": "Apache-Spark/3.5.0 Delta-Lake/3.0.0",
+    "txnId": "550e8400-e29b-41d4-a716-446655440002"
+  }
+}
+{
+  "add": {
+    "path": "partition_date=2024-01-01/part-00000-xxx.parquet",
+    "partitionValues": {
+      "partition_date": "2024-01-01"
+    },
+    "size": 1247,
+    "modificationTime": 1704067800000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":2,\"minValues\":{\"id\":1,\"name\":\"alice\",\"feature1\":0.5},\"maxValues\":{\"id\":2,\"name\":\"bob\",\"feature1\":0.8},\"nullCount\":{\"id\":0,\"name\":0,\"feature1\":0}}"
+  }
+}
 ```
 
 ### read 
