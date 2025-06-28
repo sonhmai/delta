@@ -195,20 +195,25 @@ streaming_events/
         00000000000000000001.json <- new (add operation from streaming)
 
 checkpoints/streaming_events/
-    metadata
+    metadata <- updated with batch 0 info
     sources/
         0/
-            0
+            0 <- Kafka source state for source index 0
     state/
         0/
-            0/
+            0/ <- state store files (empty for stateless operations)
     commits/
-        0
-        1 <- new commit for batch 1
+        0 <- commit info for batch 0  
     offsets/
-        0
-        1 <- Kafka offset: topic=user_events, partition=0, offset=2
+        0 <- Kafka starting offsets
+        1 <- Kafka end offsets after processing batch 0 (3 partitions)
 ```
+
+What gets created during first micro-batch:
+1. Delta table data file (part-00000-batch0-xxx.parquet)
+2. Delta transaction log entry (00000000000000000001.json) 
+3. Spark streaming checkpoint structure (sources/, state/, commits/, offsets/)
+4. Kafka offset tracking for exactly-once processing
 
 Sample content of 00000000000000000001.json
 ```json
@@ -244,6 +249,57 @@ Sample content of 00000000000000000001.json
     "dataChange": true,
     "stats": "{\"numRecords\":3,\"minValues\":{\"user_id\":123,\"timestamp\":\"2024-01-01T10:00:30.000Z\"},\"maxValues\":{\"user_id\":789,\"timestamp\":\"2024-01-01T10:01:15.000Z\"},\"nullCount\":{\"event_id\":0,\"user_id\":0,\"event_type\":0,\"timestamp\":0}}"
   }
+}
+```
+
+Sample content of checkpoints/streaming_events/offsets/0
+```json
+{
+  "batchWatermarkMs": 0,
+  "batchTimestampMs": 1704096000000,
+  "conf": {
+    "spark.sql.streaming.stateStore.providerClass": "org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider",
+    "spark.sql.streaming.join.stateFormatVersion": "2",
+    "spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion": "2",
+    "spark.sql.streaming.multipleWatermarkPolicy": "min",
+    "spark.sql.streaming.aggregation.stateFormatVersion": "2"
+  }
+}
+{
+  "user_events": {
+    "0": 0,
+    "1": 0,
+    "2": 0
+  }
+}
+```
+
+Sample content of checkpoints/streaming_events/offsets/1  
+```json
+{
+  "batchWatermarkMs": 0,
+  "batchTimestampMs": 1704096030000,
+  "conf": {
+    "spark.sql.streaming.stateStore.providerClass": "org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider",
+    "spark.sql.streaming.join.stateFormatVersion": "2",
+    "spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion": "2",
+    "spark.sql.streaming.multipleWatermarkPolicy": "min",
+    "spark.sql.streaming.aggregation.stateFormatVersion": "2"
+  }
+}
+{
+  "user_events": {
+    "0": 2,
+    "1": 1,
+    "2": 0
+  }
+}
+```
+
+Sample content of checkpoints/streaming_events/commits/0
+```json
+{
+  "nextBatchWatermarkMs": 0
 }
 ```
 
@@ -283,7 +339,7 @@ checkpoints/streaming_events/
     offsets/
         0
         1
-        2 <- Kafka offset: topic=user_events, partition=0, offset=4
+        2 <- Kafka offsets after processing batch 1 (3 partitions)
 ```
 
 ### streaming query restart
@@ -305,8 +361,8 @@ query_restart = (parsed_df
 ```
 
 Recovery process:
-- Reads last committed Kafka offset from `checkpoints/streaming_events/offsets/2`
-- Resumes processing from offset 5 (next unprocessed message)
+- Reads last committed Kafka offsets from `checkpoints/streaming_events/offsets/2`
+- Resumes processing from next unprocessed messages across all 3 partitions
 - Ensures exactly-once processing semantics
 
 ### read from streaming delta table
