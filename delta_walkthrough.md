@@ -13,6 +13,7 @@
     * [overwrite of date T+2 to fix data quality](#overwrite-of-date-t2-to-fix-data-quality)
     * [read T+2](#read-t2)
     * [overwrite of date T to fix data quality](#overwrite-of-date-t-to-fix-data-quality)
+    * [read T](#read-t)
     * [time travel to rollback T to a previous version](#time-travel-to-rollback-t-to-a-previous-version)
     * [write T+3](#write-t3)
     * [vacuum](#vacuum)
@@ -75,7 +76,13 @@ data = [
     Row(id=2, name='bob', feature1=0.8, partition_date=date(2024, 1, 1))
 ]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-01'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -113,7 +120,13 @@ data = [
     Row(id=4, name='diana', feature1=0.9, partition_date=date(2024, 1, 2))
 ]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-02'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -154,7 +167,13 @@ data = [
     Row(id=6, name='frank', feature1=0.4, partition_date=date(2024, 1, 3))
 ]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-03'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -301,7 +320,13 @@ VALUES (7, 'grace', 0.6, '2024-01-04')
 ```python
 data = [Row(id=7, name='grace', feature1=0.6, partition_date=date(2024, 1, 4))]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-04'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -377,7 +402,13 @@ data = [
     Row(id=9, name='iris', feature1=0.9, partition_date=date(2024, 1, 5))
 ]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-05'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -453,7 +484,13 @@ VALUES (10, 'jack', 0.8, '2024-01-06')
 ```python
 data = [Row(id=10, name='jack', feature1=0.8, partition_date=date(2024, 1, 6))]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-06'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -579,7 +616,13 @@ VALUES (11, 'kelly', 0.3, 0.7, '2024-01-07')
 ```python
 data = [Row(id=11, name='kelly', feature1=0.3, feature2=0.7, partition_date=date(2024, 1, 7))]
 df = spark.createDataFrame(data)
-df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-07'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
