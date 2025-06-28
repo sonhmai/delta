@@ -733,6 +733,77 @@ daily_snapshot/
         _last_checkpoint
 ```
 
+Sample content of 00000000000000000011.json
+```json
+{
+  "commitInfo": {
+    "timestamp": 1704073200000,
+    "operation": "ADD COLUMNS",
+    "operationParameters": {
+      "columns": "[{\"name\":\"feature2\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}}]"
+    },
+    "readVersion": 10,
+    "isolationLevel": "Serializable",
+    "isBlindAppend": true,
+    "operationMetrics": {},
+    "engineInfo": "Apache-Spark/3.5.0 Delta-Lake/3.0.0",
+    "txnId": "550e8400-e29b-41d4-a716-446655440012"
+  }
+}
+{
+  "metaData": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "format": {
+      "provider": "parquet",
+      "options": {}
+    },
+    "schemaString": "{\"type\":\"struct\",\"fields\":[{\"name\":\"id\",\"type\":\"long\",\"nullable\":true,\"metadata\":{}},{\"name\":\"name\",\"type\":\"string\",\"nullable\":true,\"metadata\":{}},{\"name\":\"feature1\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"feature2\",\"type\":\"double\",\"nullable\":true,\"metadata\":{}},{\"name\":\"partition_date\",\"type\":\"date\",\"nullable\":true,\"metadata\":{}}]}",
+    "partitionColumns": ["partition_date"],
+    "configuration": {},
+    "createdTime": 1704067200000
+  }
+}
+```
+
+schemaString from metaData in json: now have feature2 field
+```json
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "feature1",
+      "type": "double",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "feature2",
+      "type": "double",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "partition_date",
+      "type": "date",
+      "nullable": true,
+      "metadata": {}
+    }
+  ]
+}
+```
+
 ### write with new schema
 
 ```sql
