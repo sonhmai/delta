@@ -13,7 +13,6 @@
     * [overwrite of date T+2 to fix data quality](#overwrite-of-date-t2-to-fix-data-quality)
     * [read T+2](#read-t2)
     * [overwrite of date T to fix data quality](#overwrite-of-date-t-to-fix-data-quality)
-    * [read T](#read-t)
     * [time travel to rollback T to a previous version](#time-travel-to-rollback-t-to-a-previous-version)
     * [write T+3](#write-t3)
     * [vacuum](#vacuum)
