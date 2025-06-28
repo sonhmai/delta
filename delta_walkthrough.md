@@ -313,6 +313,56 @@ daily_snapshot/
         00000000000000000004.json <- new (remove + add operations)
 ```
 
+Sample content of 00000000000000000004.json
+```json
+{
+  "commitInfo": {
+    "timestamp": 1704069600000,
+    "operation": "WRITE",
+    "operationParameters": {
+      "mode": "Overwrite",
+      "partitionBy": "[\"partition_date\"]",
+      "replaceWhere": "partition_date = '2024-01-03'"
+    },
+    "readVersion": 3,
+    "isolationLevel": "Serializable",
+    "isBlindAppend": false,
+    "operationMetrics": {
+      "numFiles": "1",
+      "numOutputRows": "2",
+      "numOutputBytes": "1289",
+      "numRemovedFiles": "1"
+    },
+    "engineInfo": "Apache-Spark/3.5.0 Delta-Lake/3.0.0",
+    "txnId": "550e8400-e29b-41d4-a716-446655440005"
+  }
+}
+{
+  "remove": {
+    "path": "partition_date=2024-01-03/part-00002-zzz.parquet",
+    "deletionTimestamp": 1704069600000,
+    "dataChange": true,
+    "extendedFileMetadata": true,
+    "partitionValues": {
+      "partition_date": "2024-01-03"
+    },
+    "size": 1235
+  }
+}
+{
+  "add": {
+    "path": "partition_date=2024-01-03/part-00003-aaa.parquet",
+    "partitionValues": {
+      "partition_date": "2024-01-03"
+    },
+    "size": 1289,
+    "modificationTime": 1704069600000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":2,\"minValues\":{\"id\":5,\"name\":\"eve_corrected\",\"feature1\":0.45},\"maxValues\":{\"id\":6,\"name\":\"frank_corrected\",\"feature1\":0.75},\"nullCount\":{\"id\":0,\"name\":0,\"feature1\":0}}"
+  }
+}
+```
+
 ### read T+2
 
 ```sql
