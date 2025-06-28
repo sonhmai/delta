@@ -303,6 +303,58 @@ Sample content of checkpoints/streaming_events/commits/0
 }
 ```
 
+Updated content of checkpoints/streaming_events/metadata (after batch 0)
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440013",
+  "runId": "550e8400-e29b-41d4-a716-446655440014",
+  "name": null,
+  "timestamp": "2024-01-01T10:01:00.000Z", <- updated to batch completion time
+  "batchId": 0, <- changed from -1 to 0 (first actual batch)
+  "batchDuration": 30000, <- now shows actual processing time
+  "durationMs": { <- added detailed timing breakdown
+    "addBatch": 25000,
+    "getBatch": 3000,
+    "queryPlanning": 1000,
+    "triggerExecution": 30000,
+    "walCommit": 1000
+  },
+  "eventTime": { <- added event time statistics from processed data
+    "min": "2024-01-01T10:00:30.000Z",
+    "max": "2024-01-01T10:01:15.000Z",
+    "avg": "2024-01-01T10:00:52.500Z",
+    "watermark": "1970-01-01T00:00:00.000Z"
+  },
+  "stateOperators": [],
+  "sources": [
+    {
+      "description": "KafkaV2[Subscribe[user_events]]",
+      "startOffset": { <- now shows actual Kafka starting offsets
+        "user_events": {
+          "0": 0,
+          "1": 0,
+          "2": 0
+        }
+      },
+      "endOffset": { <- now shows actual Kafka ending offsets
+        "user_events": {
+          "0": 2,
+          "1": 1,
+          "2": 0
+        }
+      },
+      "numInputRows": 3, <- changed from 0 to 3 (actual rows processed)
+      "inputRowsPerSecond": 100.0, <- now shows actual throughput
+      "processedRowsPerSecond": 100.0 <- now shows actual processing rate
+    }
+  ],
+  "sink": {
+    "description": "DeltaSink[streaming_events]",
+    "numOutputRows": 3 <- changed from -1 to 3 (actual rows written)
+  }
+}
+```
+
 ### second micro-batch (minute 1-2)
 
 New Kafka messages processed:
