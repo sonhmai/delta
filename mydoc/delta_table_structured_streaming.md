@@ -530,8 +530,16 @@ query_restart = (parsed_df
 
 Recovery process:
 - Reads last committed Kafka offsets from `checkpoints/streaming_events/offsets/2`
-- Resumes processing from next unprocessed messages across all 3 partitions
-- Ensures exactly-once processing semantics
+- Resumes processing from next unprocessed messages:
+  - Partition 0: starts from offset 5 (next message after processed batch)
+  - Partition 1: starts from offset 4 (next message after processed batch)  
+  - Partition 2: starts from offset 2 (next message after processed batch)
+- Ensures exactly-once processing semantics by never reprocessing committed offsets
+
+Current state before restart:
+- Total messages processed: 11 (3 from batch 0 + 8 from batch 1)
+- Last batchId: 1
+- Delta table contains 2 parquet files with 11 total records
 
 ### read from streaming delta table
 
