@@ -249,7 +249,8 @@ df = spark.createDataFrame(data)
  .mode("overwrite")
  .option("replaceWhere", "partition_date = '2024-01-01'")
  .saveAsTable("daily_snapshot")
-)```
+)
+```
 
 ```
 S3 structure folder
