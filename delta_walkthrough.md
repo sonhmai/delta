@@ -67,6 +67,18 @@ VALUES (1, 'alice', 0.5, '2024-01-01'),
        (2, 'bob', 0.8, '2024-01-01')
 ```
 
+```python
+from pyspark.sql import Row
+from datetime import date
+
+data = [
+    Row(id=1, name='alice', feature1=0.5, partition_date=date(2024, 1, 1)),
+    Row(id=2, name='bob', feature1=0.8, partition_date=date(2024, 1, 1))
+]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+```
+
 ```
 S3 structure folder
 
@@ -94,6 +106,15 @@ Delta reads the transaction log to discover files:
 INSERT INTO daily_snapshot 
 VALUES (3, 'charlie', 0.3, '2024-01-02'),
        (4, 'diana', 0.9, '2024-01-02')
+```
+
+```python
+data = [
+    Row(id=3, name='charlie', feature1=0.3, partition_date=date(2024, 1, 2)),
+    Row(id=4, name='diana', feature1=0.9, partition_date=date(2024, 1, 2))
+]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
 ```
 
 ```
@@ -128,6 +149,15 @@ VALUES (5, 'eve', 0.7, '2024-01-03'),
        (6, 'frank', 0.4, '2024-01-03')
 ```
 
+```python
+data = [
+    Row(id=5, name='eve', feature1=0.7, partition_date=date(2024, 1, 3)),
+    Row(id=6, name='frank', feature1=0.4, partition_date=date(2024, 1, 3))
+]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+```
+
 ```
 S3 structure folder
 
@@ -152,6 +182,21 @@ INSERT OVERWRITE daily_snapshot
 PARTITION (partition_date = '2024-01-03')
 VALUES (5, 'eve_corrected', 0.75, '2024-01-03'),
        (6, 'frank_corrected', 0.45, '2024-01-03')
+```
+
+```python
+data = [
+    Row(id=5, name='eve_corrected', feature1=0.75, partition_date=date(2024, 1, 3)),
+    Row(id=6, name='frank_corrected', feature1=0.45, partition_date=date(2024, 1, 3))
+]
+df = spark.createDataFrame(data)
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-03'")
+ .saveAsTable("daily_snapshot")
+)
 ```
 
 ```
@@ -192,6 +237,20 @@ PARTITION (partition_date = '2024-01-01')
 VALUES (1, 'alice_updated', 0.55, '2024-01-01'),
        (2, 'bob_updated', 0.85, '2024-01-01')
 ```
+
+```python
+data = [
+    Row(id=1, name='alice_updated', feature1=0.55, partition_date=date(2024, 1, 1)),
+    Row(id=2, name='bob_updated', feature1=0.85, partition_date=date(2024, 1, 1))
+]
+df = spark.createDataFrame(data)
+(df
+ .write
+ .format("delta")
+ .mode("overwrite")
+ .option("replaceWhere", "partition_date = '2024-01-01'")
+ .saveAsTable("daily_snapshot")
+)```
 
 ```
 S3 structure folder
@@ -239,6 +298,12 @@ INSERT INTO daily_snapshot
 VALUES (7, 'grace', 0.6, '2024-01-04')
 ```
 
+```python
+data = [Row(id=7, name='grace', feature1=0.6, partition_date=date(2024, 1, 4))]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+```
+
 ```
 S3 structure folder
 
@@ -267,6 +332,13 @@ daily_snapshot/
 
 ```sql
 VACUUM daily_snapshot RETAIN 0 HOURS
+```
+
+```python
+from delta.tables import DeltaTable
+
+delta_table = DeltaTable.forName(spark, "daily_snapshot")
+delta_table.vacuum(0)
 ```
 
 ```
@@ -299,6 +371,15 @@ VALUES (8, 'henry', 0.2, '2024-01-05'),
        (9, 'iris', 0.9, '2024-01-05')
 ```
 
+```python
+data = [
+    Row(id=8, name='henry', feature1=0.2, partition_date=date(2024, 1, 5)),
+    Row(id=9, name='iris', feature1=0.9, partition_date=date(2024, 1, 5))
+]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
+```
+
 ```
 S3 structure folder
 
@@ -328,6 +409,11 @@ daily_snapshot/
 
 ```sql
 OPTIMIZE daily_snapshot
+```
+
+```python
+delta_table = DeltaTable.forName(spark, "daily_snapshot")
+delta_table.optimize().executeCompaction()
 ```
 
 ```
@@ -362,6 +448,12 @@ daily_snapshot/
 ```sql
 INSERT INTO daily_snapshot 
 VALUES (10, 'jack', 0.8, '2024-01-06')
+```
+
+```python
+data = [Row(id=10, name='jack', feature1=0.8, partition_date=date(2024, 1, 6))]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
 ```
 
 ```
@@ -440,6 +532,10 @@ daily_snapshot/
 ALTER TABLE daily_snapshot ADD COLUMN feature2 double
 ```
 
+```python
+spark.sql("ALTER TABLE daily_snapshot ADD COLUMN feature2 double")
+```
+
 ```
 S3 structure folder
 
@@ -478,6 +574,12 @@ daily_snapshot/
 ```sql
 INSERT INTO daily_snapshot 
 VALUES (11, 'kelly', 0.3, 0.7, '2024-01-07')
+```
+
+```python
+data = [Row(id=11, name='kelly', feature1=0.3, feature2=0.7, partition_date=date(2024, 1, 7))]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("append").saveAsTable("daily_snapshot")
 ```
 
 ```
@@ -532,6 +634,10 @@ Delta handles schema evolution:
 ALTER TABLE daily_snapshot ALTER COLUMN feature1 TYPE decimal(10,2)
 ```
 
+```python
+spark.sql("ALTER TABLE daily_snapshot ALTER COLUMN feature1 TYPE decimal(10,2)")
+```
+
 ```
 S3 structure folder
 
@@ -546,6 +652,10 @@ daily_snapshot/
 
 ```sql
 ALTER TABLE daily_snapshot DROP COLUMN feature2
+```
+
+```python
+spark.sql("ALTER TABLE daily_snapshot DROP COLUMN feature2")
 ```
 
 ```
@@ -574,6 +684,12 @@ Delta ignores dropped columns:
 INSERT OVERWRITE daily_snapshot 
 PARTITION (partition_date = '2024-01-07')
 VALUES (11, 'kelly_updated', 0.35, '2024-01-07')
+```
+
+```python
+data = [Row(id=11, name='kelly_updated', feature1=0.35, partition_date=date(2024, 1, 7))]
+df = spark.createDataFrame(data)
+df.write.format("delta").mode("overwrite").option("replaceWhere", "partition_date = '2024-01-07'").saveAsTable("daily_snapshot")
 ```
 
 ```
