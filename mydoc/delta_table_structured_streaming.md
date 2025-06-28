@@ -357,10 +357,16 @@ Updated content of checkpoints/streaming_events/metadata (after batch 0)
 
 ### second micro-batch (minute 1-2)
 
-New Kafka messages processed:
+New Kafka messages processed (8 messages across 3 partitions):
 ```json
 {"event_id": "evt_004", "user_id": 234, "event_type": "logout", "timestamp": "2024-01-01T10:01:30.000Z"}
 {"event_id": "evt_005", "user_id": 567, "event_type": "view", "timestamp": "2024-01-01T10:02:00.000Z"}
+{"event_id": "evt_006", "user_id": 890, "event_type": "click", "timestamp": "2024-01-01T10:02:15.000Z"}
+{"event_id": "evt_007", "user_id": 345, "event_type": "purchase", "timestamp": "2024-01-01T10:02:30.000Z"}
+{"event_id": "evt_008", "user_id": 678, "event_type": "login", "timestamp": "2024-01-01T10:02:45.000Z"}
+{"event_id": "evt_009", "user_id": 456, "event_type": "view", "timestamp": "2024-01-01T10:03:00.000Z"}
+{"event_id": "evt_010", "user_id": 123, "event_type": "logout", "timestamp": "2024-01-01T10:03:15.000Z"}
+{"event_id": "evt_011", "user_id": 789, "event_type": "click", "timestamp": "2024-01-01T10:03:30.000Z"}
 ```
 
 ```
@@ -376,7 +382,7 @@ streaming_events/
         00000000000000000002.json <- new (add operation from streaming)
 
 checkpoints/streaming_events/
-    metadata
+    metadata <- updated with batch 1 info
     sources/
         0/
             0
@@ -386,12 +392,122 @@ checkpoints/streaming_events/
             1/ <- updated state store
     commits/
         0
-        1
-        2 <- new commit for batch 2
+        1 <- new commit for batch 1
     offsets/
         0
         1
         2 <- Kafka offsets after processing batch 1 (3 partitions)
+```
+
+Sample content of 00000000000000000002.json
+```json
+{
+  "commitInfo": {
+    "timestamp": 1704096090000,
+    "operation": "STREAMING UPDATE",
+    "operationParameters": {
+      "outputMode": "Append",
+      "queryId": "550e8400-e29b-41d4-a716-446655440013",
+      "epochId": "1"
+    },
+    "readVersion": 1,
+    "isolationLevel": "Serializable",
+    "isBlindAppend": true,
+    "operationMetrics": {
+      "numAddedFiles": "1",
+      "numOutputRows": "8",
+      "numOutputBytes": "3891"
+    },
+    "engineInfo": "Apache-Spark/3.5.0 Delta-Lake/3.0.0",
+    "txnId": "550e8400-e29b-41d4-a716-446655440015"
+  }
+}
+{
+  "add": {
+    "path": "event_date=2024-01-01/part-00001-batch1-yyy.parquet",
+    "partitionValues": {
+      "event_date": "2024-01-01"
+    },
+    "size": 3891,
+    "modificationTime": 1704096090000,
+    "dataChange": true,
+    "stats": "{\"numRecords\":8,\"minValues\":{\"user_id\":123,\"timestamp\":\"2024-01-01T10:01:30.000Z\"},\"maxValues\":{\"user_id\":890,\"timestamp\":\"2024-01-01T10:03:30.000Z\"},\"nullCount\":{\"event_id\":0,\"user_id\":0,\"event_type\":0,\"timestamp\":0}}"
+  }
+}
+```
+
+Sample content of checkpoints/streaming_events/offsets/2
+```json
+{
+  "batchWatermarkMs": 0,
+  "batchTimestampMs": 1704096090000,
+  "conf": {
+    "spark.sql.streaming.stateStore.providerClass": "org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider",
+    "spark.sql.streaming.join.stateFormatVersion": "2",
+    "spark.sql.streaming.flatMapGroupsWithState.stateFormatVersion": "2",
+    "spark.sql.streaming.multipleWatermarkPolicy": "min",
+    "spark.sql.streaming.aggregation.stateFormatVersion": "2"
+  }
+}
+{
+  "user_events": {
+    "0": 5, <- partition 0: processed 3 more messages (2 → 5)
+    "1": 4, <- partition 1: processed 3 more messages (1 → 4) 
+    "2": 2  <- partition 2: processed 2 more messages (0 → 2)
+  }
+}
+```
+
+Updated content of checkpoints/streaming_events/metadata (after batch 1)
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440013",
+  "runId": "550e8400-e29b-41d4-a716-446655440014",
+  "name": null,
+  "timestamp": "2024-01-01T10:03:30.000Z", <- updated to latest batch completion time
+  "batchId": 1, <- incremented to batch 1
+  "batchDuration": 60000, <- second batch took 60 seconds
+  "durationMs": {
+    "addBatch": 45000,
+    "getBatch": 8000,
+    "queryPlanning": 2000,
+    "triggerExecution": 60000,
+    "walCommit": 5000
+  },
+  "eventTime": {
+    "min": "2024-01-01T10:01:30.000Z", <- updated to latest batch event time range
+    "max": "2024-01-01T10:03:30.000Z",
+    "avg": "2024-01-01T10:02:30.000Z",
+    "watermark": "1970-01-01T00:00:00.000Z"
+  },
+  "stateOperators": [],
+  "sources": [
+    {
+      "description": "KafkaV2[Subscribe[user_events]]",
+      "startOffset": { <- starting offsets for batch 1
+        "user_events": {
+          "0": 2,
+          "1": 1,
+          "2": 0
+        }
+      },
+      "endOffset": { <- ending offsets after batch 1
+        "user_events": {
+          "0": 5,
+          "1": 4,
+          "2": 2
+        }
+      },
+      "numInputRows": 8, <- processed 8 rows in this batch
+      "inputRowsPerSecond": 133.3, <- updated throughput metrics
+      "processedRowsPerSecond": 133.3
+    }
+  ],
+  "sink": {
+    "description": "DeltaSink[streaming_events]",
+    "numOutputRows": 8 <- wrote 8 rows to Delta table
+  }
+}
 ```
 
 ### streaming query restart
